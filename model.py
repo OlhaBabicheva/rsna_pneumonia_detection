@@ -18,16 +18,20 @@ class Net(nn.Module):
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2, padding=0),
             nn.BatchNorm2d(256),
+            nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2, padding=0),
+            nn.BatchNorm2d(256),
         )
 
         self.fc_layers = nn.Sequential(
-            nn.Linear(256*56*56, 512),
-            nn.ReLU(),
-            nn.BatchNorm1d(512),
-            nn.Linear(512, 256),
+            nn.Linear(256*28*28, 256),
             nn.ReLU(),
             nn.BatchNorm1d(256),
-            nn.Linear(256, num_classes)
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.BatchNorm1d(128),
+            nn.Linear(128, num_classes)
         )
     
     def forward(self, x):
@@ -38,7 +42,7 @@ class Net(nn.Module):
 
 def test():
     batch_size, in_channels, img_size = 64, 1, 224
-    model = Net(1, 2)
+    model = Net(1, 1)
     x = torch.randn(batch_size, in_channels, img_size, img_size)
     print(model(x).shape)
     assert model(x).shape == (batch_size, 2), "Generator test failed"
