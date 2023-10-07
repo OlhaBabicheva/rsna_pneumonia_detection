@@ -7,9 +7,9 @@ from tqdm import tqdm
 from pathlib import Path
 
 argparser = argparse.ArgumentParser()
-argparser.add_argument("--train-labels", type=str)
-argparser.add_argument("--train-images", type=str)
-argparser.add_argument("--processed-images", type=str)
+argparser.add_argument("--train-labels", type=str, required=True)
+argparser.add_argument("--train-images", type=str, required=True)
+argparser.add_argument("--processed-images", type=str, required=True)
 argparser.add_argument("--train-val-split", type=float, default=0.8)
 args = argparser.parse_args()
 
