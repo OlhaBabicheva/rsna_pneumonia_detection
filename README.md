@@ -4,4 +4,4 @@
 Olha Babicheva
 
 ### Dataset:
-[RSNA pneumonia detection challenge]https://www.kaggle.com/competitions/rsna-pneumonia-detection-challenge/data
+[RSNA Pneumonia Detection Challenge](https://www.kaggle.com/competitions/rsna-pneumonia-detection-challenge/data)
