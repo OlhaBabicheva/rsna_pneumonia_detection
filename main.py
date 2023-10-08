@@ -13,6 +13,12 @@ args = argparser.parse_args()
 def load_file(path):
     return np.load(path).astype(np.float32)
 
+def checkpoint(model, filename):
+    torch.save(model.state_dict(), filename)
+    
+def resume(model, filename):
+    model.load_state_dict(torch.load(filename))
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Parameters
@@ -22,6 +28,7 @@ batch_size = 32
 num_workers = 4
 l_rate = 1e-3
 num_epochs = 7
+e_stop_thresh = 5
 
 train_transforms = transforms.Compose([
                                     transforms.ToTensor(),
@@ -57,40 +64,58 @@ model = Net(in_dim, out_dim).to(device)
 loss_fn = torch.nn.BCEWithLogitsLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr = l_rate)
 
-def train(dataloader, model):
-    size = len(dataloader.dataset)
-    best_accuracy = -1
+def train_val(train_loader, val_loader, model):
+    size = len(train_loader.dataset)
+    best_acc = -1
+    best_epoch = -1
 
     model.train()
 
     for epoch in range(num_epochs):
         print(f'Epoch {epoch+1}\n---------------')
 
-        for batch, (X, y) in enumerate(train_loader):
-            X = X.to(device)
-            y = y.to(device, dtype=torch.float32)
+        for batch, (X_train, y_train) in enumerate(train_loader):
+            X_train = X_train.to(device)
+            y_train = y_train.to(device, dtype=torch.float32)
 
             # Compute predictions and loss
-            pred = model(X)[:, 0]
+            pred = model(X_train)[:, 0]
             pred = pred.to(dtype=torch.float32)
-            loss = loss_fn(pred, y)
+            loss = loss_fn(pred, y_train)
 
             # Backpropagation
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
-            loss, current = loss.item(), (batch + 1) * len(X)
+            loss, current = loss.item(), (batch + 1) * len(X_train)
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
-            prediction = pred.round()
-            n_correct = (prediction == y).sum()
-            training_acc = n_correct/X.shape[0]
-            print(f"accuracy: {training_acc.item()*100}%")
-    
-    torch.save(model.state_dict(), 'model.pt')
+            n_correct = (pred.round() == y_train).sum()
+            training_acc = n_correct/X_train.shape[0]
+            print(f"training accuracy: {training_acc.item()*100}%")
+        
+        model.eval()
+        with torch.no_grad():
+            X_val, y_val = next(val_loader)
+            X_val = X_val.to(device)
+            y_val = y_val.to(device, dtype=torch.float32)
+
+            pred = model(X_val)[:, 0]
+            n_correct = (pred.round() == y_val).sum()
+            val_acc = n_correct/X_val.shape[0]
+            print(f"End of epoch {epoch+1}: validation accuracy = {val_acc.item()*100}%")
+
+            if acc > best_acc:
+                best_acc = acc
+                best_epoch = epoch
+                checkpoint(model, "best_model.pth")
+            elif epoch - best_epoch > e_stop_thresh:
+                print(f"Early stopped training at epoch {epoch+1}")
+                break
 
 if __name__ == '__main__':
     print(f'Using {device}')
     print(f"There are {len(train_dataset)} images in training set and {len(val_dataset)} images in validation set\n")
-    train(train_loader, model)
+    val_iter = iter(val_loader)
+    train_val(train_loader, val_iter, model)
