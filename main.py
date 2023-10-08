@@ -58,8 +58,9 @@ loss_fn = torch.nn.BCEWithLogitsLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr = l_rate)
 
 def train(dataloader, model):
-    print(f"There are {len(train_dataset)} images in training set and {len(val_dataset)} images in validation set\n")
     size = len(dataloader.dataset)
+    best_accuracy = -1
+
     model.train()
 
     for epoch in range(num_epochs):
@@ -79,11 +80,17 @@ def train(dataloader, model):
             loss.backward()
             optimizer.step()
 
-            if batch % 100 == 0:
-                loss, current = loss.item(), (batch + 1) * len(X)
-                print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+            loss, current = loss.item(), (batch + 1) * len(X)
+            print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+
+            prediction = pred.round()
+            n_correct = (prediction == y).sum()
+            training_acc = n_correct/X.shape[0]
+            print(f"accuracy: {training_acc.item()*100}%")
     
     torch.save(model.state_dict(), 'model.pt')
 
 if __name__ == '__main__':
+    print(f'Using {device}')
+    print(f"There are {len(train_dataset)} images in training set and {len(val_dataset)} images in validation set\n")
     train(train_loader, model)
