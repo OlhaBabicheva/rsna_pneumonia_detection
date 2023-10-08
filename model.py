@@ -16,17 +16,17 @@ class Net(nn.Module):
             nn.ReLU(),
             nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1, bias=False),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2, padding=0),
             nn.BatchNorm2d(256),
         )
 
         self.fc_layers = nn.Sequential(
-            nn.Linear(256*32*32, 256),
+            nn.Linear(256*64*64, 256),
             nn.ReLU(),
             nn.Linear(256, 128, bias=False),
             nn.ReLU(),
             nn.BatchNorm1d(128),
-            nn.Linear(128, num_classes, bias=False)
+            nn.Linear(128, num_classes),
+            nn.Softmax(dim=1)
         )
     
     def forward(self, x):

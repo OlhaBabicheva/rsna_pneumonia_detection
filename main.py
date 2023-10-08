@@ -24,10 +24,10 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # Parameters
 in_dim = 1
 out_dim = 1
-batch_size = 64
-num_workers = 4
-l_rate = 1e-3
-num_epochs = 7
+batch_size = 32
+num_workers = 8
+l_rate = 0.0001
+num_epochs = 30
 e_stop_thresh = 5
 
 train_transforms = transforms.Compose([
