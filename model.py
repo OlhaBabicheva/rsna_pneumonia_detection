@@ -7,31 +7,26 @@ class Net(nn.Module):
         self.in_dim = in_dim
         self.num_classes = num_classes
         self.conv_layers = nn.Sequential(
-            nn.Conv2d(in_dim, 128, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(in_dim, 128, kernel_size=3, stride=1, padding=1, bias=False),
             nn.ReLU(),
             nn.BatchNorm2d(128),
             nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2, padding=0),
-            nn.BatchNorm2d(128),
             nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2, padding=0),
-            nn.BatchNorm2d(256),
-            nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1, bias=False),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2, padding=0),
             nn.BatchNorm2d(256),
         )
 
         self.fc_layers = nn.Sequential(
-            nn.Linear(256*28*28, 256),
+            nn.Linear(256*32*32, 256),
             nn.ReLU(),
-            nn.BatchNorm1d(256),
-            nn.Linear(256, 128),
+            nn.Linear(256, 128, bias=False),
             nn.ReLU(),
             nn.BatchNorm1d(128),
-            nn.Linear(128, num_classes)
+            nn.Linear(128, num_classes, bias=False)
         )
     
     def forward(self, x):
@@ -41,11 +36,11 @@ class Net(nn.Module):
         return x
 
 def test():
-    batch_size, in_channels, img_size = 64, 1, 224
+    batch_size, in_channels, img_size = 64, 1, 64
     model = Net(1, 1)
     x = torch.randn(batch_size, in_channels, img_size, img_size)
     print(model(x).shape)
-    assert model(x).shape == (batch_size, 2), "Generator test failed"
+    assert model(x).shape == (batch_size, 1), "Generator test failed"
     print("Success, tests passed!")
 
 if __name__ == "__main__":

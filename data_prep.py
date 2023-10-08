@@ -39,7 +39,7 @@ def img_processing():
         dcm_path = Path(args.train_images + f"/{patient_id}")
         dcm_path = dcm_path.with_suffix(".dcm")
         dcm = pydicom.read_file(dcm_path).pixel_array / 255
-        dcm_arr = cv2.resize(dcm, (224, 224)).astype(np.float16)
+        dcm_arr = cv2.resize(dcm, (64, 64)).astype(np.float16)
 
         label = balanced_labels.Target.iloc[c]
         

@@ -24,7 +24,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # Parameters
 in_dim = 1
 out_dim = 1
-batch_size = 32
+batch_size = 64
 num_workers = 4
 l_rate = 1e-3
 num_epochs = 7
@@ -34,7 +34,7 @@ train_transforms = transforms.Compose([
                                     transforms.ToTensor(),
                                     transforms.Normalize(0.49, 0.248),
                                     transforms.RandomAffine(degrees=(-5, 5), translate=(0, 0.05), scale=(0.9, 1.1)),
-                                    transforms.RandomResizedCrop((224, 224), scale=(0.35, 1), antialias=True)
+                                    transforms.RandomResizedCrop((64, 64), scale=(0.35, 1), antialias=True)
 ])
 
 val_transforms = transforms.Compose([
@@ -84,7 +84,7 @@ def train_val(train_loader, val_loader, model):
             loss = loss_fn(pred, y_train)
 
             # Backpropagation
-            optimizer.zero_grad()
+            optimizer.zero_grad(set_to_none=True)
             loss.backward()
             optimizer.step()
 
@@ -106,8 +106,8 @@ def train_val(train_loader, val_loader, model):
             val_acc = n_correct/X_val.shape[0]
             print(f"End of epoch {epoch+1}: validation accuracy = {val_acc.item()*100}%")
 
-            if acc > best_acc:
-                best_acc = acc
+            if val_acc > best_acc:
+                best_acc = val_acc
                 best_epoch = epoch
                 checkpoint(model, "best_model.pth")
             elif epoch - best_epoch > e_stop_thresh:
