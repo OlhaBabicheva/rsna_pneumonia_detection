@@ -4,7 +4,7 @@ import torch
 import torchvision
 from torchvision import transforms
 from torch.utils.data import DataLoader
-from model import Net
+from model import VGGNet
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--data-path", type=str, required=True)
