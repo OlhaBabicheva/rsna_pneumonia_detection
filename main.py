@@ -15,11 +15,8 @@ def load_file(path):
 
 def checkpoint(model, filename):
     torch.save(model.state_dict(), filename)
-    
-def resume(model, filename):
-    model.load_state_dict(torch.load(filename))
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Parameters
 in_dim = 1
@@ -71,7 +68,7 @@ def train_val(train_loader, val_loader, model):
     model.train()
 
     for epoch in range(num_epochs):
-        print(f'Epoch {epoch+1}')
+        print(f"Epoch {epoch+1}")
         print('-'*15)
 
         for batch, (X_train, y_train) in enumerate(train_loader):
@@ -118,8 +115,8 @@ def train_val(train_loader, val_loader, model):
                 print(f"Early stopped training at epoch {epoch+1}")
                 break
 
-if __name__ == '__main__':
-    print(f'Using {device}')
+if __name__ == "__main__":
+    print(f"Using {device}")
     print(f"There are {len(train_dataset)} images in training set and {len(val_dataset)} images in validation set\n")
     val_iter = iter(val_loader)
     train_val(train_loader, val_iter, model)
