@@ -110,8 +110,8 @@ def train_val(train_loader, val_loader, model):
             print(f"validation accuracy: {validation_acc.item()*100}%")
             print('-'*15)
 
-            if val_acc > best_acc:
-                best_acc = val_acc
+            if validation_acc > best_acc:
+                best_acc = validation_acc
                 best_epoch = epoch
                 checkpoint(model, "best_model.pth")
             elif epoch - best_epoch > e_stop_thresh:
