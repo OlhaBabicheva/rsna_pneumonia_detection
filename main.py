@@ -23,18 +23,17 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Parameters
 in_dim = 1
-out_dim = 1
+out_dim = 2
 batch_size = 64
-num_workers = 8
-l_rate = 0.0001
-num_epochs = 30
-e_stop_thresh = 5
+num_workers = 4
+num_epochs = 50
+e_stop_thresh = 10
 
 train_transforms = transforms.Compose([
                                     transforms.ToTensor(),
                                     transforms.Normalize(0.49, 0.248),
                                     transforms.RandomAffine(degrees=(-5, 5), translate=(0, 0.05), scale=(0.9, 1.1)),
-                                    transforms.RandomResizedCrop((64, 64), scale=(0.35, 1), antialias=True)
+                                    transforms.RandomResizedCrop((224, 224), scale=(0.35, 1), antialias=True)
 ])
 
 val_transforms = transforms.Compose([
@@ -59,10 +58,10 @@ val_dataset = torchvision.datasets.DatasetFolder(
 train_loader = DataLoader(train_dataset, batch_size = batch_size, num_workers = num_workers, shuffle = True)
 val_loader = DataLoader(val_dataset, batch_size = batch_size, num_workers = num_workers, shuffle = False)
 
-model = Net(in_dim, out_dim).to(device)
-
-loss_fn = torch.nn.BCEWithLogitsLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr = l_rate)
+model = VGGNet(in_dim, out_dim).to(device)
+loss_fn = nn.CrossEntropyLoss()
+optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+exp_lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 
 def train_val(train_loader, val_loader, model):
     size = len(train_loader.dataset)
@@ -72,26 +71,29 @@ def train_val(train_loader, val_loader, model):
     model.train()
 
     for epoch in range(num_epochs):
-        print(f'Epoch {epoch+1}\n---------------')
+        print(f'Epoch {epoch+1}')
+        print('-'*15)
 
         for batch, (X_train, y_train) in enumerate(train_loader):
             X_train = X_train.to(device)
-            y_train = y_train.to(device, dtype=torch.float32)
+            y_train = y_train.to(device)
 
             # Compute predictions and loss
-            pred = model(X_train)[:, 0]
-            pred = pred.to(dtype=torch.float32)
+            pred = model(X_train)
             loss = loss_fn(pred, y_train)
 
             # Backpropagation
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
             optimizer.step()
-
+            
+            # Running training accuracy
+            _, prediction = pred.max(1)
+            
             loss, current = loss.item(), (batch + 1) * len(X_train)
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
-            n_correct = (pred.round() == y_train).sum()
+            n_correct = (prediction == y_train).sum()
             training_acc = n_correct/X_train.shape[0]
             print(f"training accuracy: {training_acc.item()*100}%")
         
@@ -99,12 +101,14 @@ def train_val(train_loader, val_loader, model):
         with torch.no_grad():
             X_val, y_val = next(val_loader)
             X_val = X_val.to(device)
-            y_val = y_val.to(device, dtype=torch.float32)
+            y_val = y_val.to(device)
 
-            pred = model(X_val)[:, 0]
-            n_correct = (pred.round() == y_val).sum()
-            val_acc = n_correct/X_val.shape[0]
-            print(f"End of epoch {epoch+1}: validation accuracy = {val_acc.item()*100}%")
+            pred = model(X_val)
+            _, prediction = pred.max(1)
+            n_correct = (prediction == y_val).sum()
+            validation_acc = n_correct/X_val.shape[0]
+            print(f"validation accuracy: {validation_acc.item()*100}%")
+            print('-'*15)
 
             if val_acc > best_acc:
                 best_acc = val_acc
