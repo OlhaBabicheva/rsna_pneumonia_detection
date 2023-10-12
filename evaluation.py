@@ -55,14 +55,14 @@ for batch, (X_val, y_val) in enumerate(val_loader):
         predictions.append(prediction)
         labels.append(y_val)
 
-predictions = torch.tensor(predictions)
-labels = torch.tensor(labels).int()
+predictions = torch.cat([pred for pred in predictions], dim=0)
+labels = torch.cat([label for label in labels], dim=0)
 
-accuracy = torchmetrics.Accuracy()(predictions, labels)
-precision = torchmetrics.Precision()(predictions, labels)
-recall = torchmetrics.Recall()(predictions, labels)
-cmatrix = torchmetrics.ConfusionMatrix(num_classes=2)(predictions, labels)
-cmatrix_threshed = torchmetrics.ConfusionMatrix(num_classes=2, threshold=0.25)(predictions, labels)
+accuracy = torchmetrics.Accuracy(task='multiclass', num_classes=2).to(device)(predictions, labels)
+precision = torchmetrics.Precision(task='multiclass', num_classes=2).to(device)(predictions, labels)
+recall = torchmetrics.Recall(task='multiclass', num_classes=2).to(device)(predictions, labels)
+cmatrix = torchmetrics.ConfusionMatrix(task='multiclass', num_classes=2).to(device)(predictions, labels)
+cmatrix_threshed = torchmetrics.ConfusionMatrix(task='multiclass', num_classes=2, threshold=0.25).to(device)(predictions, labels)
 
 print(f"Val Accuracy: {accuracy}")
 print(f"Val Precision: {precision}")
